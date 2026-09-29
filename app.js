@@ -1,3 +1,58 @@
+// ==========================================
+// 1. INICIALIZACIÓN DE FIREBASE
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyAdKquQTWLidOqZ4xGTT9ft0r2VwgCaphM",
+  authDomain: "inspeccion-de-vehiculos-c3bc1.firebaseapp.com",
+  databaseURL: "https://inspeccion-de-vehiculos-c3bc1-default-rtdb.firebaseio.com",
+  projectId: "inspeccion-de-vehiculos-c3bc1",
+  storageBucket: "inspeccion-de-vehiculos-c3bc1.firebasestorage.app",
+  messagingSenderId: "441344346931",
+  appId: "1:441344346931:web:66bf95868afe3508b18c46",
+  measurementId: "G-FH59GMEXXP"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Habilitar persistencia sin conexión
+database.ref('vehiculos').keepSynced(true);
+database.ref('reportes').keepSynced(true);
+
+// ==========================================
+// 2. SINCRONIZACIÓN DE VEHÍCULOS EN TIEMPO REAL
+// ==========================================
+database.ref('vehiculos').on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    vehicles = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+  } else {
+    // Si la base de datos está vacía, subir los vehículos por defecto
+    defaultVehicles.forEach(v => {
+      database.ref('vehiculos/' + v.id).set(v);
+    });
+  }
+  
+  // Actualizar la interfaz
+  if (typeof renderVehicleOptions === 'function') renderVehicleOptions();
+  if (typeof renderFleetList === 'function') renderFleetList();
+});
+
+// ==========================================
+// 3. SINCRONIZACIÓN DE REPORTES EN TIEMPO REAL
+// ==========================================
+database.ref('reportes').on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    reports = Object.values(data);
+  } else {
+    reports = [];
+  }
+  
+  // Actualizar la tabla de informes del comandante
+  if (typeof renderReportsTable === 'function') renderReportsTable();
+});
+
 // PIN de seguridad para Comandancia (Por defecto: 1234)
 const ADMIN_PIN = "1234";
 
@@ -179,9 +234,8 @@ function submitInspection(e) {
     notes: document.getElementById('notes').value || 'Sin novedades',
     photo: currentPhotoBase64
   };
-
-  reports.unshift(report);
-  localStorage.setItem('bomberos_reports', JSON.stringify(reports));
+  //enviar reporte a la base de datos
+  database.ref('reportes').push(report);
 
   // --- AJUSTE 1: Limpiar las fechas de SOAT, Tecno y Extintor del vehículo actual ---
   vehicle.soat = "";
@@ -317,8 +371,8 @@ function addVehicle(e) {
     return;
   }
 
-  vehicles.push({ id: code, name: `${code} ${name}`, plate, soat: "", tecno: "", extinguisher: "" });
-  localStorage.setItem('bomberos_vehicles', JSON.stringify(vehicles));
+ const newVehicle = { id: code, name: `${code} ${name}`, plate: plate, soat: "", tecno: "", extinguisher: "" };
+ database.ref('vehiculos/' + code).set(newVehicle);
 
   renderVehicleOptions();
   renderFleetList();
@@ -328,10 +382,9 @@ function addVehicle(e) {
 
 function deleteVehicle(id) {
   if (confirm(`¿Estás seguro de eliminar la unidad ${id}?`)) {
-    vehicles = vehicles.filter(v => v.id !== id);
-    localStorage.setItem('bomberos_vehicles', JSON.stringify(vehicles));
-    renderVehicleOptions();
-    renderFleetList();
+    database.ref('vehiculos/' + id).remove();
+  }
+}
   }
 }
 
