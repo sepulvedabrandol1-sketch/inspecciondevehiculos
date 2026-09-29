@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Control de Flota - Estación de Bomberos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ENCABEZADO Y BARRA DE NAVEGACIÓN -->
+  <header class="app-header">
+    <div class="header-container">
+      <h1>🚒 Estación de Bomberos</h1>
+      <p class="subtitle">Gestión e Inspección Diaria de Vehículos</p>
+    </div>
+    
+    <div class="role-selector">
+      <button id="btn-mode-driver" class="btn-toggle active">👨‍🚒 Vista Conductor</button>
+      <button id="btn-mode-admin" class="btn-toggle">🧑‍💼 Vista Comandante</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 1. VISTA CONDUCTOR / MAQUINISTA -->
+    <section id="driver-view" class="view-panel">
+      <h2>📋 Control e Inspección Diaria de Unidad</h2>
+
+      <!-- Seleccionar Vehículo -->
+      <div class="card">
+        <h3>1. Seleccionar Vehículo de la Flota</h3>
+        <div class="form-group">
+          <label for="select-vehicle">Vehículo Activo:</label>
+          <select id="select-vehicle" onchange="onVehicleSelect()">
+          </select>
+        </div>
+      </div>
+
+      <!-- Estado de Documentos -->
+      <div class="card">
+        <h3>2. Vencimiento de Documentación y Extintor</h3>
+        <p class="small-text">Semaforización automática: Verde (Al día), Amarillo (Por vencer), Rojo (Vencido)</p>
+
+        <div class="doc-grid">
+          <div class="doc-item">
+            <div>
+              <strong>SOAT</strong>
+              <div id="badge-soat" class="badge">SIN FECHA</div>
+            </div>
+            <input type="date" id="date-soat" onchange="saveDocDate('soat')">
+          </div>
+
+          <div class="doc-item">
+            <div>
+              <strong>Tecnomecánica</strong>
+              <div id="badge-tecno" class="badge">SIN FECHA</div>
+            </div>
+            <input type="date" id="date-tecno" onchange="saveDocDate('tecno')">
+          </div>
+
+          <div class="doc-item">
+            <div>
+              <strong>Recarga Extintor</strong>
+              <div id="badge-extinguisher" class="badge">SIN FECHA</div>
+            </div>
+            <input type="date" id="date-extinguisher" onchange="saveDocDate('extinguisher')">
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Registro Diario -->
+      <div class="card">
+        <h3>3. Ficha de Inspección Pre-operacional</h3>
+        <form id="inspection-form" onsubmit="submitInspection(event)">
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="driver-name">Nombre del Conductor / Maquinista:</label>
+              <input type="text" id="driver-name" placeholder="Ej. Bombero Carlos Pérez" required>
+            </div>
+
+            <div class="form-group">
+              <label for="kms">Kilometraje Actual (KM):</label>
+              <input type="number" id="kms" placeholder="Ej. 45200" required>
+            </div>
+
+            <div class="form-group">
+              <label for="hours-pump">Horas de Bomba (Si aplica):</label>
+              <input type="number" id="hours-pump" placeholder="Ej. 120">
+            </div>
+
+            <div class="form-group">
+              <label for="fuel-level">Nivel de Combustible:</label>
+              <select id="fuel-level">
+                <option value="Lleno (100%)">Lleno (100%)</option>
+                <option value="3/4 (75%)">3/4 (75%)</option>
+                <option value="1/2 (50%)">1/2 (50%)</option>
+                <option value="1/4 (25%)">1/4 (25%)</option>
+                <option value="Reserva (Crítico)">Reserva (Crítico)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Checklist Operativo (Desmarcado por defecto) -->
+          <h4 class="margin-top">🛠️ Checklist de Funcionamiento</h4>
+          <p class="small-text">Selecciona los elementos que se encuentren en óptimo funcionamiento:</p>
+          <div class="checklist-grid">
+            <label class="checkbox-item">
+              <input type="checkbox" id="chk-lights">
+              Luces, Sirenas y Licuadoras
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="chk-brakes">
+              Sistema de Frenos y Dirección
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="chk-pump">
+              Bomba de Agua y Válvulas
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="chk-tires">
+              Presión y Estado de Neumáticos
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="chk-extinguisher-physical">
+              Extintor Físico a bordo y cargado
+            </label>
+          </div>
+
+          <!-- Novedades y Evidencia Fotografica -->
+          <div class="form-group margin-top">
+            <label for="notes">Novedades u Observaciones:</label>
+            <textarea id="notes" rows="3" placeholder="Escribe aquí si el vehículo tiene alguna falla, rayón, falta de herramientas, etc."></textarea>
+          </div>
+
+          <div class="form-group margin-top">
+            <label for="photo-evidence">📷 Foto / Evidencia de Daño o Novedad (Opcional):</label>
+            <input type="file" id="photo-evidence" accept="image/*" capture="environment" onchange="previewImage(event)">
+            <div id="photo-preview-container" class="margin-top hidden">
+              <p class="small-text">Vista previa de la fotografía:</p>
+              <img id="photo-preview" src="" alt="Vista previa de evidencia" style="max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #cbd5e1;">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block margin-top">🚀 Registrar Inspección Diaria</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 2. VISTA COMANDANTE -->
+    <section id="admin-view" class="view-panel hidden">
+      <h2>🧑‍💼 Panel de Control de Mandos y Comandancia</h2>
+
+      <div class="tab-header">
+        <button class="tab-btn active" onclick="switchAdminTab('reports')">📊 Informes Recibidos</button>
+        <button class="tab-btn" onclick="switchAdminTab('fleet')">🚒 Administración de Flota</button>
+      </div>
+
+      <!-- TAB INFORMES -->
+      <div id="tab-reports" class="tab-content">
+        <div class="action-bar">
+          <h3>Historial de Inspecciones</h3>
+          <button class="btn btn-success" onclick="exportCSV()">📥 Exportar a CSV / Excel</button>
+        </div>
+
+        <div class="table-container card">
+          <table id="table-reports">
+            <thead>
+              <tr>
+                <th>Fecha y Hora</th>
+                <th>Vehículo</th>
+                <th>Conductor</th>
+                <th>KM</th>
+                <th>Combustible</th>
+                <th>Novedades</th>
+                <th>Evidencia</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="table-reports-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB VEHÍCULOS -->
+      <div id="tab-fleet" class="tab-content hidden card">
+        <h3>Agregar Nuevo Vehículo a la Flota</h3>
+        <form onsubmit="addVehicle(event)" class="form-grid">
+          <div class="form-group">
+            <label for="new-v-code">Código Interno:</label>
+            <input type="text" id="new-v-code" placeholder="Ej. M-03" required>
+          </div>
+          <div class="form-group">
+            <label for="new-v-name">Nombre / Tipo de Unidad:</label>
+            <input type="text" id="new-v-name" placeholder="Ej. Máquina Tanque" required>
+          </div>
+          <div class="form-group">
+            <label for="new-v-plate">Placa del Vehículo:</label>
+            <input type="text" id="new-v-plate" placeholder="Ej. ABC-123" required>
+          </div>
+          <div class="form-group" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary btn-block">➕ Agregar Vehículo</button>
+          </div>
+        </form>
+
+        <h3 class="margin-top">Lista de Vehículos Registrados</h3>
+        <ul id="fleet-list" class="fleet-list">
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL LOGIN PIN -->
+  <div id="admin-login-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>🔐 Acceso Exclusivo Comandancia</h3>
+      <p>Ingresa el PIN de seguridad para acceder a la administración:</p>
+      <input type="password" id="admin-pin" placeholder="PIN de acceso (Defecto: 1234)">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAdminLogin()">Cancelar</button>
+        <button class="btn btn-primary" onclick="verifyAdminPin()">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE -->
+  <div id="report-detail-modal" class="modal hidden">
+    <div class="modal-content large">
+      <h3>📄 Detalle Completo del Informe de Inspección</h3>
+      <div id="report-detail-body">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeReportDetail()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
