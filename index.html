@@ -239,5 +239,24 @@
   </div>
 
   <script src="app.js"></script>
+  
+  <script>
+  // Registrar Service Worker para soporte offline
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker registrado con éxito'))
+        .catch(err => console.error('Error al registrar Service Worker:', err));
+    });
+  }
+
+  // Escuchar cuando el celular recupera conexión a Internet
+  window.addEventListener('online', () => {
+    console.log('Conexión reestablecida. Sincronizando datos...');
+    if (typeof sincronizarReportesPendientes === 'function') {
+      sincronizarReportesPendientes();
+    }
+  });
+</script>
 </body>
 </html>
