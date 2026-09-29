@@ -3,7 +3,7 @@ const ADMIN_PIN = "1234";
 
 // Inicialización de Datos por Defecto
 const defaultVehicles = [
-  { id: "M-01", name: "M-01 Máquina Extintora", plate: "BMB-001", soat: "", tecno: "", extinguisher: "" },
+  { id: "AM-14", name: "M-01 Máquina Extintora", plate: "BMB-001", soat: "", tecno: "", extinguisher: "" },
   { id: "M-02", name: "M-02 Cisterna / Tanque", plate: "BMB-002", soat: "", tecno: "", extinguisher: "" },
   { id: "A-01", name: "A-01 Ambulancia Médica", plate: "BMB-003", soat: "", tecno: "", extinguisher: "" }
 ];
