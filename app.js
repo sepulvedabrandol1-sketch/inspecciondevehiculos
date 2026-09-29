@@ -359,3 +359,35 @@ function exportCSV() {
   link.click();
   document.body.removeChild(link);
 }
+// ==========================================
+// FUNCIONES PARA MODO OFFLINE (SIN INTERNET)
+// ==========================================
+
+// Función para guardar el reporte en la memoria del celular si no hay internet
+function guardarEnTelefono(datos) {
+  let pendientes = JSON.parse(localStorage.getItem('reportes_pendientes') || '[]');
+  pendientes.push(datos);
+  localStorage.setItem('reportes_pendientes', JSON.stringify(pendientes));
+}
+
+// Función que envía los reportes guardados en cuanto regresa el internet
+function sincronizarReportesPendientes() {
+  let pendientes = JSON.parse(localStorage.getItem('reportes_pendientes') || '[]');
+  if (pendientes.length > 0) {
+    console.log(`Sincronizando ${pendientes.length} reportes pendientes...`);
+    
+    // Obtener reportes actuales o enviar a la lista principal
+    let reportesActuales = JSON.parse(localStorage.getItem('firestation_reports') || '[]');
+    reportesActuales = reportesActuales.concat(pendientes);
+    localStorage.setItem('firestation_reports', JSON.stringify(reportesActuales));
+    
+    // Limpiar reportes pendientes tras sincronizar
+    localStorage.removeItem('reportes_pendientes');
+    alert('✅ ¡Conexión restablecida! Los reportes guardados sin internet se han sincronizado correctamente.');
+    
+    // Si tienes una función para renderizar la tabla o vista, ejecútala aquí
+    if (typeof renderReports === 'function') {
+      renderReports();
+    }
+  }
+}
